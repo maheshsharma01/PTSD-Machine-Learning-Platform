@@ -1,0 +1,47 @@
+MIT License
+
+Copyright (c) 2025 PTSD ML Platform
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Additional Terms for Medical and Clinical Use
+
+This software is intended for research and educational purposes. When used in 
+clinical or medical contexts, the following additional terms apply:
+
+1. **Clinical Validation**: All models and predictions must be validated by 
+   qualified healthcare professionals before clinical use.
+
+2. **Professional Oversight**: The software should only be used under the 
+   supervision of licensed healthcare providers.
+
+3. **No Medical Advice**: This software does not provide medical advice, 
+   diagnosis, or treatment recommendations. All clinical decisions should 
+   be made by qualified medical professionals.
+
+4. **Regulatory Compliance**: Users are responsible for ensuring compliance 
+   with local healthcare regulations and standards (e.g., HIPAA, GDPR).
+
+5. **Data Protection**: All patient data must be handled according to 
+   applicable privacy laws and institutional policies.
+
+6. **Liability**: The authors and contributors are not liable for any 
+   clinical decisions or outcomes resulting from the use of this software.

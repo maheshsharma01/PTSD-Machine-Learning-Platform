@@ -1,0 +1,60 @@
+# Enhanced PTSD ML Platform Requirements
+# Production-ready dependencies with proper version management
+
+# Core Streamlit Framework
+streamlit>=1.28.0
+streamlit-authenticator>=0.2.3
+
+# Data Processing and Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Machine Learning Libraries
+scikit-learn>=1.3.0
+xgboost>=1.7.0
+lightgbm>=3.3.0
+joblib>=1.3.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Database and ORM
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+alembic>=1.12.0
+
+# Configuration Management
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Data Validation and Processing
+pydantic>=2.0.0
+marshmallow>=3.20.0
+
+# File Processing
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# Security and Authentication
+cryptography>=41.0.0
+passlib>=1.7.4
+bcrypt>=4.0.0
+
+# Utilities and Helpers
+tqdm>=4.65.0
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# Logging and Monitoring
+structlog>=23.1.0
+
+# Development Tools (Optional)
+pytest>=7.4.0
+black>=23.7.0
+flake8>=6.0.0
+
+# Web Server for Production
+gunicorn>=21.2.0

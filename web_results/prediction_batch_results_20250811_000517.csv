@@ -1,0 +1,4 @@
+patient_id,age,gender,trauma_type,pcl5_intrusive,pcl5_avoidance,pcl5_negative_mood,pcl5_hyperarousal,cortisol_level,ptsd_diagnosis,pcl5_total,PTSD_Prediction,PTSD_Prediction_Label
+P001,25,F,Combat,3.2,2.9,3.4,3.1,15.2,1,12.6,1,PTSD Positive
+P002,34,M,Accident,2.8,3.5,2.1,2.6,12.8,0,11.0,0,PTSD Negative
+P003,45,F,Natural Disaster,4.1,3.8,4.2,3.9,18.5,1,16.0,1,PTSD Positive

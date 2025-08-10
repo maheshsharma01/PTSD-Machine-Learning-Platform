@@ -1,0 +1,69 @@
+# Production Configuration for PTSD ML Platform
+# Inherits from base.yaml and overrides specific values
+
+app:
+  debug: false
+  log_level: "WARNING"
+  enable_analytics: true
+
+database:
+  # Use environment variables in production
+  pool_size: 20
+  max_overflow: 40
+  pool_timeout: 60
+  pool_recycle: 7200
+  echo_queries: false
+
+security:
+  # MUST be set via environment variables
+  enable_csrf: true
+  enable_rate_limiting: true
+  rate_limit_per_minute: 60
+  session_cookie_secure: true
+  password_min_length: 12
+
+logging:
+  level: "WARNING"
+  file_enabled: true
+  file_path: "/var/log/ptsd_ml/application.log"
+  file_max_size: "50MB"
+  file_backup_count: 10
+  console_enabled: false
+  structured_logging: true
+
+monitoring:
+  enable_metrics: true
+  enable_error_tracking: true
+  performance_monitoring: true
+  health_check_interval: 60
+
+cache:
+  default_ttl: 7200  # 2 hours
+  max_cache_size: 2000  # MB
+  cleanup_interval: 600  # 10 minutes
+
+features:
+  enable_user_authentication: true
+  enable_model_versioning: true
+  enable_experiment_tracking: true
+  enable_audit_logging: true
+  enable_data_encryption: true
+  enable_backup_restore: true
+
+ui:
+  show_debug_info: false
+
+# Production-specific settings
+production:
+  ssl_required: true
+  backup_schedule: "0 2 * * *"  # Daily at 2 AM
+  maintenance_window: "02:00-04:00"
+  max_concurrent_users: 100
+  resource_limits:
+    max_memory_mb: 8192
+    max_cpu_percent: 80
+  
+  # High availability settings
+  failover_enabled: true
+  load_balancing: true
+  auto_scaling: true

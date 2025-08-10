@@ -1,0 +1,98 @@
+# Base Configuration for PTSD ML Platform
+app:
+  name: "PTSD ML Platform"
+  version: "2.0.0"
+  description: "Advanced Machine Learning Platform for PTSD Prediction"
+  debug: false
+  log_level: "INFO"
+  max_upload_size: 200  # MB
+  session_timeout: 3600  # seconds
+  enable_analytics: true
+  timezone: "UTC"
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "ptsd_ml"
+  username: "ptsd_user"
+  password: ""
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+  pool_recycle: 3600
+  echo_queries: false
+
+ml:
+  model_storage_path: "./models"
+  default_test_size: 0.2
+  default_cv_folds: 5
+  default_random_state: 42
+  max_features: 1000
+  cache_ttl: 3600
+  supported_algorithms:
+    - "SVM"
+    - "ANN" 
+    - "Decision_Tree"
+    - "Gaussian_NB"
+    - "Random_Forest"
+    - "Gradient_Boosting"
+
+data:
+  upload_directory: "./data/uploads"
+  processed_directory: "./data/processed"
+  templates_directory: "./data/templates"
+  max_file_size: 100  # MB
+  allowed_extensions:
+    - ".csv"
+    - ".xlsx"
+    - ".xls"
+  backup_enabled: true
+  backup_retention_days: 30
+
+security:
+  secret_key: "change-me-in-production"
+  enable_csrf: true
+  enable_rate_limiting: true
+  rate_limit_per_minute: 100
+  password_min_length: 8
+  session_cookie_secure: false
+  password_hash_algorithm: "bcrypt"
+  jwt_algorithm: "HS256"
+  jwt_expiry_hours: 24
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_enabled: true
+  file_path: "./logs/application.log"
+  file_max_size: "10MB"
+  file_backup_count: 5
+  console_enabled: true
+  structured_logging: true
+
+monitoring:
+  enable_metrics: true
+  metrics_port: 8000
+  health_check_interval: 30
+  enable_error_tracking: true
+  performance_monitoring: true
+
+cache:
+  default_ttl: 3600  # seconds
+  max_cache_size: 1000  # MB
+  cleanup_interval: 300  # seconds
+
+features:
+  enable_user_authentication: false
+  enable_model_versioning: true
+  enable_experiment_tracking: true
+  enable_audit_logging: true
+  enable_data_encryption: false
+  enable_backup_restore: true
+
+ui:
+  theme: "light"
+  sidebar_state: "expanded"
+  show_debug_info: false
+  page_title_suffix: " - PTSD ML Platform"
+  footer_text: "PTSD ML Platform - Advanced Clinical Prediction System"

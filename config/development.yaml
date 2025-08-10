@@ -1,0 +1,45 @@
+# Development Configuration for PTSD ML Platform
+# Inherits from base.yaml and overrides specific values
+
+app:
+  debug: true
+  log_level: "DEBUG"
+  enable_analytics: false
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "ptsd_ml_dev"
+  username: "ptsd_user"
+  password: "dev_password"
+  echo_queries: true
+
+security:
+  secret_key: "dev-secret-key-not-for-production"
+  enable_csrf: false
+  enable_rate_limiting: false
+  session_cookie_secure: false
+
+logging:
+  level: "DEBUG"
+  console_enabled: true
+  file_enabled: true
+  file_path: "./logs/development.log"
+
+monitoring:
+  enable_metrics: false
+  enable_error_tracking: false
+
+features:
+  enable_user_authentication: false
+  enable_audit_logging: false
+
+ui:
+  show_debug_info: true
+
+# Development-specific settings
+development:
+  auto_reload: true
+  use_test_data: true
+  mock_external_services: true
+  enable_profiling: true
