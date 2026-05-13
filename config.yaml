@@ -1,0 +1,10 @@
+credentials:
+  usernames:
+    mahesh:
+      name: Mahesh Sharma
+      password: '$2b$12$VCpMn0uC01iOtwb4sESTAeshm4YHPJBLVXEgLGbbEfmZYWQoNULiq'  # abhi dummy hai
+
+cookie:
+  name: ptsd_app
+  key: secret_key_123
+  expiry_days: 30
