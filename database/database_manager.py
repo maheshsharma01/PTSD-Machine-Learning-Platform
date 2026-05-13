@@ -17,6 +17,12 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 import streamlit as st
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, Boolean, text # Add 'text' here
+# This is the missing link. It forces Python to read your .env file.
+load_dotenv() 
+
 
 try:
     from src.core.config_manager import get_database_config
@@ -191,9 +197,10 @@ class DatabaseManager:
         return f"postgresql://{username}:{password}@{host}:{port}/{database}"
     
     def _test_connection(self):
-        """Test database connection"""
+        """Test database connection using SQLAlchemy 2.0 syntax"""
         with self.engine.connect() as conn:
-            conn.execute("SELECT 1")
+            # Wrap the string in the text() function
+            conn.execute(text("SELECT 1"))
     
     @contextmanager
     def get_session(self) -> Session:
