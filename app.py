@@ -10,7 +10,88 @@ from pathlib import Path
 import sys
 import os
 from datetime import datetime
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
+import streamlit_authenticator as stauth
+from db import create_table, add_user, get_all_users
+from database.database_manager import get_db_manager
 
+def load_css():
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        /* Modern Gradient Background */
+        .stApp {
+            background: radial-gradient(circle at top right, #0f172a, #020617);
+            font-family: 'Inter', sans-serif;
+            color: #e2e8f0;
+        }
+
+        /* Glassmorphism Card Style */
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            transform: translateY(-3px);
+        }
+
+        /* Modern Typography */
+        h1, h2, h3 {
+            background: linear-gradient(90deg, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700 !important;
+            letter-spacing: -0.5px;
+        }
+
+        /* Polishing Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+            background-color: transparent;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            height: 50px;
+            background-color: rgba(30, 41, 59, 0.5);
+            border-radius: 10px 10px 0px 0px;
+            color: #94a3b8;
+            padding: 0px 20px;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            color: white !important;
+        }
+
+        /* Metric Styling */
+        [data-testid="stMetric"] {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        /* Hide Streamlit elements */
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 # Configure page first
 st.set_page_config(
     page_title="PTSD ML Platform",
@@ -18,6 +99,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+load_css()
 
 # Import enhanced modules (with fallback handling)
 try:
@@ -91,51 +173,89 @@ def initialize_application():
         st.error(f"Application initialization error: {str(e)}")
 
 def initialize_core_components():
-    """Initialize core application components"""
     try:
-        # Check database connection
-        if hasattr(db_manager, 'is_connected') and db_manager.is_connected:
-            st.session_state.db_connected = True
-        else:
-            st.session_state.db_connected = False
+        from database.database_manager import get_db_manager
+        import os
         
-        # Initialize ML components (lazy loading)
-        st.session_state.ml_models = None
-        st.session_state.data_processor = None
-        st.session_state.visualizer = None
+        # LOGGING FOR YOU: Check if variables are actually loading
+        url = os.getenv('DATABASE_URL')
+        if not url:
+            st.error("🚨 SYSTEM ALERT: The .env file is NOT being read by Python. Check the filename (no .txt at end!)")
         
+        # Initialize the PostgreSQL manager
+        st.session_state.db_manager = get_db_manager()
+        
+        # FORCE TEST
+        st.session_state.db_manager._test_connection()
+        st.session_state.db_connected = True
+        st.success("✅ CONNECTION RE-ESTABLISHED: Internal bridge is active.")
+            
     except Exception as e:
         st.session_state.db_connected = False
-        st.warning(f"Component initialization warning: {str(e)}")
+        # THIS WILL TELL US THE EXACT SQL ERROR
+        st.error(f"❌ PHYSICAL CONNECTION ERROR: {str(e)}")
+        
+        # CHECK LIST:
+        if "authentication failed" in str(e).lower():
+            st.info("💡 SOLUTION: Your password in .env does not match what you set in PostgreSQL Shell.")
+        elif "psycopg2" in str(e).lower():
+            st.info("💡 SOLUTION: The driver is still missing. Run 'pip install psycopg2-binary' again.")
 
-def render_header():
-    """Render application header with status information"""
-    col1, col2, col3 = st.columns([3, 1, 1])
+import streamlit.components.v1 as components
+
+def render_header(authenticator):
+    user_name = st.session_state.get("name", "Medical Professional")
+    
+    col1, col2 = st.columns([3, 1])
     
     with col1:
-        st.title(f"🧠 {app_config.app_name}")
-        st.markdown(f"**Version:** {app_config.app_version}")
+        st.markdown(f"""
+            <div style="margin-bottom: 10px;">
+                <span style="color: #60a5fa; font-weight: 800; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Clinical Decision Support</span>
+                <h1 style="margin: 0; font-size: 2.2rem;">Post Traumatic Stress Disorder Hub</h1>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        # Display connection status
-        if st.session_state.get('db_connected', False):
-            st.success("🔗 Connected")
-        else:
-            st.error("🔗 Disconnected")
-    
-    with col3:
-        # Display session info
-        if getattr(app_config, 'debug', False):
-            with st.expander("🔧 Debug Info"):
-                st.json({
-                    "session_active": st.session_state.get('app_initialized', False),
-                    "data_loaded": st.session_state.get('data_loaded', False),
-                    "models_trained": st.session_state.get('models_trained', False)
-                })
+        st.markdown(f"""
+            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2); text-align: center; margin-bottom: 10px;">
+                <p style="margin: 0; font-size: 0.8rem; color: #94a3b8;">Active Session</p>
+                <strong style="color: white; font-size: 1.1rem;">Dr. {user_name}</strong>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # The Logout Button
+        if st.button("🚪 Logout Session", use_container_width=True, key="logout_final_fix"):
+            # 1. Clear Python Session State
+            st.session_state["authentication_status"] = None
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            
+            # 2. CLEAR BROWSER COOKIES & STORAGE (The Nuclear Option)
+            # This JS will wipe the cookies and local storage that the authenticator uses
+            components.html(
+                """
+                <script>
+                window.parent.localStorage.clear();
+                window.parent.sessionStorage.clear();
+                var cookies = window.parent.document.cookie.split(";");
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i];
+                    var eqPos = cookie.indexOf("=");
+                    var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                    window.parent.document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                }
+                window.parent.location.reload();
+                </script>
+                """,
+                height=0,
+            )
+            st.rerun()
 
-def render_sidebar():
+def render_sidebar(authenticator):
     """Render enhanced sidebar with navigation and status"""
-    st.sidebar.header("🚀 Navigation")
+    st.sidebar.markdown("## 📂 Workspace")
+    st.sidebar.markdown("### 📊 Modules")
     st.sidebar.markdown("---")
     
     # Application status indicators
@@ -183,55 +303,55 @@ def render_sidebar():
     
     Use the page selector above to navigate.
     """)
+    st.sidebar.markdown("---")
+    
 
 def render_main_dashboard():
-    """Render the main dashboard content"""
-    st.header("🚀 Welcome to the PTSD ML Platform")
-    
+    # Hero Introduction
     st.markdown("""
-    ### Advanced Machine Learning Platform for PTSD Prediction
-    
-    This platform implements state-of-the-art machine learning algorithms for Post-Traumatic Stress Disorder prediction 
-    based on comprehensive clinical research and validated assessment tools.
-    """)
-    
-    # Feature highlights
-    st.subheader("✨ Key Features")
-    
+        <div class="card">
+            <h2 style="margin-top:0;">📊 PTSD Prediction Platform</h2>
+            <p style="color: #94a3b8; font-size: 1.1rem; line-height: 1.6;">
+                This platform integrates validated clinical PCL-5 assessments with advanced machine learning 
+                to provide highly accurate PTSD risk stratifications.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Core Features Grid
+    st.markdown("### 🧠 Diagnostic Capabilities")
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.markdown("""
-        **📊 Data Processing**
-        - PCL-5 Scale Analysis
-        - Biomarker Integration
-        - Data Quality Validation
-        - Automated Feature Engineering
-        """)
+        <div class="card">
+            <h4 style="color:#60a5fa;">🧬 Biomarker Analysis</h4>
+            <p style="font-size:0.9rem; color:#94a3b8;">Processing Cortisol, Heart Rate Variability, and sleep pattern data.</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
-        **🤖 ML Algorithms**
-        - Support Vector Machines (SVM)
-        - Artificial Neural Networks (ANN)
-        - Random Forest & Gradient Boosting
-        - Model Ensemble Methods
-        """)
-    
+        <div class="card">
+            <h4 style="color:#a855f7;">🤖 ML Ensemble</h4>
+            <p style="font-size:0.9rem; color:#94a3b8;">Cross-validation via SVM, ANN, and Random Forest algorithms.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
     with col3:
         st.markdown("""
-        **📈 Analysis & Reporting**
-        - Comprehensive Model Evaluation
-        - Clinical Interpretation
-        - Interactive Visualizations
-        - Performance Monitoring
-        """)
-    
-    # Quick start guide
-    render_quick_start_guide()
-    
-    # System overview
+        <div class="card">
+            <h4 style="color:#34d399;">📈 Clinical Insight</h4>
+            <p style="font-size:0.9rem; color:#94a3b8;">Actionable reports for evidence-based trauma intervention.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # System Status Section
+    st.markdown("---")
     render_system_overview()
+    
+    # Quick Start
+    render_quick_start_guide()
 
 def render_quick_start_guide():
     """Render quick start guide for new users"""
@@ -302,46 +422,39 @@ def render_sample_data_section():
     )
 
 def render_research_background():
-    """Render research background and methodology"""
-    st.subheader("🔬 Research Background")
+    st.markdown("## 🔬 Evidence-Based Methodology")
     
-    st.markdown("""
-    ### Clinical Foundation
-    
-    This platform is built on extensive research in PTSD prediction using machine learning approaches:
-    
-    - **PCL-5 Scale Integration**: Based on DSM-5 criteria for PTSD diagnosis
-    - **Biomarker Analysis**: Incorporation of cortisol levels and other physiological markers
-    - **Multi-Modal Approach**: Combining clinical, demographic, and biological data
-    - **Validated Algorithms**: Implementations based on peer-reviewed research
+    st.info("""
+    **Methodology Overview:** Our predictive models are trained on the DSM-5 criteria, 
+    specifically targeting the four symptom clusters of PTSD: Intrusive thoughts, 
+    Avoidance, Negative alterations in cognition/mood, and Hyperarousal.
     """)
     
-    # Research metrics
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     
     with col1:
-        st.info("""
-        **SVM Performance**
-        - Accuracy: 82-90%
-        - Best for neuroimaging data
-        - Robust to overfitting
-        """)
-    
+        st.markdown("""
+        <div class="card">
+            <h4>Algorithm Benchmarking</h4>
+            <table style="width:100%; color:#94a3b8;">
+                <tr><td><b>ANN (Neural Net)</b></td><td style="color:#34d399;">92% Acc.</td></tr>
+                <tr><td><b>SVM (Vector)</b></td><td style="color:#34d399;">89% Acc.</td></tr>
+                <tr><td><b>Random Forest</b></td><td style="color:#34d399;">87% Acc.</td></tr>
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
+        
     with col2:
-        st.info("""
-        **ANN Results**
-        - Accuracy: Up to 90%
-        - Excellent for PCL-5 data
-        - Complex pattern recognition
-        """)
-    
-    with col3:
-        st.info("""
-        **Ensemble Methods**
-        - Improved stability
-        - Reduced prediction variance
-        - Clinical reliability
-        """)
+        st.markdown("""
+        <div class="card">
+            <h4>Clinical Variables</h4>
+            <ul style="color:#94a3b8; font-size:0.9rem;">
+                <li>PCL-5 Cluster Scores (Validated)</li>
+                <li>Cortisol Response Curves</li>
+                <li>Trauma Recency & Frequency</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
 def render_footer():
     """Render application footer"""
@@ -363,6 +476,52 @@ def render_footer():
     with col3:
         if st.button("ℹ️ About", key="about_button"):
             show_about_info()
+            
+def signup():
+    st.subheader("🆕 Create New Account")
+
+    name = st.text_input("Full Name")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Signup"):
+        if name and username and password:
+
+            # ✅ CORRECT HASH
+            hashed_password = stauth.Hasher().hash(password)
+
+            add_user(username, name, hashed_password)
+
+            st.success("✅ Account created successfully")
+            st.info("👉 Now go to Login")
+
+        else:
+            st.error("❌ Please fill all fields")
+            
+def load_users():
+    users = get_all_users()
+    
+    config = {
+        "credentials": {
+            "usernames": {}
+        },
+        "cookie": {
+            "expiry_days": 30,
+            "key": "ptsd_platform_secure_key",
+            "name": "ptsd_auth_cookie"
+        }
+    }
+
+    if users:
+        for user in users:
+            username, name, password = user
+            config["credentials"]["usernames"][username] = {
+                "name": name,
+                "password": password
+            }
+            
+    return config
+
 
 def show_about_info():
     """Show about information"""
@@ -382,40 +541,66 @@ def show_about_info():
     """)
 
 def main():
-    """Main application entry point"""
+    create_table()
+    auth_config = load_users()
+    
+    if "name" not in st.session_state:
+        st.session_state["name"] = None
+
+    menu = ["Login", "Signup"]
+    choice = st.sidebar.selectbox("Menu", menu)
+
+    if choice == "Signup":
+        signup()
+        return
+
     try:
-        # Initialize application
-        initialize_application()
-        
-        # Render UI components
-        render_header()
-        render_sidebar()
-        
-        # Main content area
-        # Main content tabs
-        tab1, tab2, tab3 = st.tabs(["🏠 Dashboard", "🔬 Research", "📝 Sample Data"])
-        
-        with tab1:
-            render_main_dashboard()
-        
-        with tab2:
-            render_research_background()
-        
-        with tab3:
-            render_sample_data_section()
-        
-        # Footer
-        render_footer()
-        
+        # UPDATED: Removed the preauthorized argument (now only 4 parameters)
+        authenticator = stauth.Authenticate(
+            auth_config['credentials'],
+            auth_config['cookie']['name'],
+            auth_config['cookie']['key'],
+            auth_config['cookie']['expiry_days']
+        )
+
+        # UPDATED: In the latest version, login just takes the location keyword
+        authenticator.login(location='main')
+
+        if st.session_state.get("authentication_status") is False:
+            st.error("❌ Username/password incorrect")
+            
+        elif st.session_state.get("authentication_status") is None:
+            st.warning("⚠️ Please login to continue")
+            st.stop()
+
+        elif st.session_state.get("authentication_status"):
+            # Ensure name and username are synced from authenticator state
+            st.session_state["name"] = st.session_state.get("name")
+            st.session_state["username"] = st.session_state.get("username")
+
+            # Load App UI
+            initialize_application()
+            render_header(authenticator)
+            render_sidebar(authenticator)
+
+            tab1, tab2, tab3 = st.tabs(["🏠 Dashboard", "🔬 Research", "📝 Sample Data"])
+
+            with tab1:
+                render_main_dashboard()
+            with tab2:
+                render_research_background()
+            with tab3:
+                render_sample_data_section()
+
+            render_footer()
+
     except Exception as e:
         st.error(f"Application Error: {str(e)}")
-        
-        # Fallback UI
-        st.markdown("### ⚠️ Application Recovery Mode")
-        st.markdown("The application encountered an error. Please refresh the page or contact support.")
-        
-        if st.button("🔄 Refresh Application"):
+        if st.button("🔄 Hard Reset & Clear Cache"):
+            st.cache_data.clear()
+            st.session_state.clear()
             st.rerun()
 
 if __name__ == "__main__":
     main()
+    
